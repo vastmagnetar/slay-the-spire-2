@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slay the Spire 2</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body class="game-body">
+    <div id="game-container" class="game-main">
+        <!-- Main menu screen -->
+        <div id="menu-screen" class="screen active">
+            <div class="menu-content">
+                <h1 class="game-title">SLAY THE SPIRE</h1>
+                <div class="menu-buttons">
+                    <button class="btn btn-primary" onclick="startNewRun()">New Run</button>
+                    <button class="btn btn-secondary" onclick="showAscension()">Ascension</button>
+                    <button class="btn btn-secondary" onclick="showSettings()">Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Character selection screen -->
+        <div id="character-screen" class="screen">
+            <div class="character-selection">
+                <h2>Choose Your Character</h2>
+                <div class="character-grid">
+                    <div class="character-card" onclick="selectCharacter('ironclad')">
+                        <div class="character-icon ironclad"></div>
+                        <h3>The Ironclad</h3>
+                        <p>Strength scales. Heavy attacking.</p>
+                    </div>
+                    <div class="character-card" onclick="selectCharacter('silent')">
+                        <div class="character-icon silent"></div>
+                        <h3>The Silent</h3>
+                        <p>Poison & precision strikes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ascension selection -->
+        <div id="ascension-screen" class="screen">
+            <div class="ascension-selection">
+                <h2>Select Ascension Level</h2>
+                <div class="ascension-buttons">
+                    <button class="btn" onclick="startRunWithAscension(0)">Ascension 0</button>
+                    <button class="btn" onclick="startRunWithAscension(5)">Ascension 5</button>
+                    <button class="btn" onclick="startRunWithAscension(10)">Ascension 10</button>
+                    <button class="btn" onclick="startRunWithAscension(15)">Ascension 15</button>
+                    <button class="btn" onclick="startRunWithAscension(20)">Ascension 20</button>
+                </div>
+                <button class="btn btn-back" onclick="backToMenu()">Back</button>
+            </div>
+        </div>
+
+        <!-- Game screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-layout">
+                <div class="game-header-bar">
+                    <div class="header-left">
+                        <div class="header-stat">
+                            <span class="stat-icon">❤️</span>
+                            <span class="stat-label">HP:</span>
+                            <span class="stat-value" id="player-hp">80</span>
+                        </div>
+                        <div class="header-stat">
+                            <span class="stat-icon">💰</span>
+                            <span class="stat-label">GOLD:</span>
+                            <span class="stat-value" id="player-gold">0</span>
+                        </div>
+                    </div>
+                    <div class="header-center">
+                        <div class="game-title-small">SLAY THE SPIRE 2</div>
+                    </div>
+                    <div class="header-right">
+                        <div class="header-stat">
+                            <span class="stat-icon">🗻</span>
+                            <span class="stat-label">ACT:</span>
+                            <span class="stat-value" id="current-act">1</span>
+                        </div>
+                        <div class="header-stat">
+                            <span class="stat-icon">📈</span>
+                            <span class="stat-label">ASCE:</span>
+                            <span class="stat-value" id="ascension-level">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="game-content" class="game-content">
+                    <!-- Map view -->
+                    <div id="map-view" class="view active">
+                        <div class="map-layout">
+                            <div class="map-section">
+                                <h2 class="map-title">ACT <span id="map-act-number">1</span> - THE SPIRE</h2>
+                                <div class="map-canvas-container">
+                                    <canvas id="map-canvas" width="1000" height="600" class="spire-canvas"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="map-choices-section">
+                                <h3 class="choices-title">UPCOMING FLOORS</h3>
+                                <div id="map-nodes-list" class="nodes-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Combat view -->
+                    <div id="combat-view" class="view hidden">
+                        <div class="combat-container">
+                            <!-- Top section: Enemies -->
+                            <div class="combat-top">
+                                <div class="enemies-section">
+                                    <h3 class="section-label">⚔️ ENEMIES</h3>
+                                    <div id="enemies-container" class="enemies-grid"></div>
+                                </div>
+                            </div>
+
+                            <!-- Middle section: Turn info, player stats, deck -->
+                            <div class="combat-middle">
+                                <div class="middle-left">
+                                    <div class="turn-display">
+                                        <div class="turn-counter">
+                                            <span class="turn-label">TURN</span>
+                                            <span class="turn-number" id="turn-number">1</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="middle-center">
+                                    <div class="player-vital-stats">
+                                        <div class="vital-box hp-box">
+                                            <div class="vital-label">❤️ HP</div>
+                                            <div class="vital-value" id="combat-player-hp">80</div>
+                                        </div>
+                                        <div class="vital-box block-box">
+                                            <div class="vital-label">⚡ BLOCK</div>
+                                            <div class="vital-value" id="combat-player-block">0</div>
+                                        </div>
+                                        <div class="vital-box strength-box">
+                                            <div class="vital-label">💪 STR</div>
+                                            <div class="vital-value" id="combat-player-strength">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="middle-right">
+                                    <div class="energy-display">
+                                        <div class="energy-circles" id="energy-circles"></div>
+                                        <div class="energy-text">
+                                            <span id="current-energy">3</span>/<span id="max-energy">3</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom section: Player hand and buttons -->
+                            <div class="combat-bottom">
+                                <div class="hand-section">
+                                    <h3 class="section-label">🃏 HAND</h3>
+                                    <div class="hand-container">
+                                        <div id="player-hand" class="player-hand-grid"></div>
+                                    </div>
+                                </div>
+
+                                <div class="combat-info-bar">
+                                    <div class="info-item">
+                                        <span class="info-label">Draw:</span>
+                                        <span class="info-value" id="draw-pile">12</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Discard:</span>
+                                        <span class="info-value" id="discard-pile">5</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Exhaust:</span>
+                                        <span class="info-value" id="exhaust-pile">0</span>
+                                    </div>
+                                    <button class="btn-end-turn" onclick="endTurn()" id="end-turn-btn">
+                                        <span class="btn-text">END TURN</span>
+                                        <span class="btn-hotkey">(Space)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game over screen -->
+        <div id="game-over-screen" class="screen">
+            <div class="game-over-content">
+                <h1 id="game-over-title">Game Over</h1>
+                <div id="game-over-stats"></div>
+                <button class="btn btn-primary" onclick="returnToMenu()">Return to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/websocket.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script src="/static/js/game.js"></script>
+</body>
+</html>
